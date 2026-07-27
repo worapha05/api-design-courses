@@ -1,0 +1,19 @@
+{
+  "type": "module",
+  "scripts": {
+    "grpc:unary-server": "node examples/04-grpc-unary/server.js",
+    "grpc:unary-client": "node examples/04-grpc-unary/client.js",
+    "graphql:server": "node examples/03-graphql-server/server.js",
+    "compare": "node examples/01-api-paradigms/compare.js"
+  },
+  "dependencies": {
+    "@apollo/server": "^4.11.0",
+    "@grpc/grpc-js": "^1.12.0",
+    "@grpc/proto-loader": "^0.7.0",
+    "body-parser": "^1.20.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "graphql": "^16.9.0",
+    "graphql-tag": "^2.12.6"
+  }
+}

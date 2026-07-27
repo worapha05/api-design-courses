@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package pulse.v1;
+
+message WatchRequest {
+  string device_id = 1;
+  int32 max_points = 2;
+}
+
+message Metric {
+  string device_id = 1;
+  double cpu = 2;
+  double memory = 3;
+  string ts = 4;
+}
+
+service PulseTelemetry {
+  rpc WatchMetrics(WatchRequest) returns (stream Metric);
+}

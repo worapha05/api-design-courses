@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package telemetry.v1;
+
+message WatchRequest {
+  string device_id = 1;
+  int32 max_points = 2;
+}
+
+message Metric {
+  string device_id = 1;
+  double cpu = 2;
+  double memory = 3;
+  int64 ts = 4;
+}
+
+message Sample {
+  double value = 1;
+}
+
+message UploadSummary {
+  int32 count = 1;
+  double average = 2;
+}
+
+message ChatMessage {
+  string user = 1;
+  string text = 2;
+}
+
+service TelemetryService {
+  rpc WatchMetrics(WatchRequest) returns (stream Metric);
+  rpc UploadSamples(stream Sample) returns (UploadSummary);
+  rpc Chat(stream ChatMessage) returns (stream ChatMessage);
+}

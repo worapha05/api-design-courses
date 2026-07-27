@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package perf.v1;
+
+message EchoRequest {
+  string payload = 1;
+}
+
+message EchoReply {
+  string payload = 1;
+  string trace_id = 2;
+}
+
+service PerfService {
+  rpc Echo(EchoRequest) returns (EchoReply);
+}

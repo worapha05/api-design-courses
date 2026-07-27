@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package novashelf.v1;
+
+message Stock {
+  string book_id = 1;
+  int32 quantity = 2;
+}
+
+message GetStockRequest {
+  string book_id = 1;
+}
+
+message AdjustStockRequest {
+  string book_id = 1;
+  int32 delta = 2;
+}
+
+service InventoryService {
+  rpc GetStock(GetStockRequest) returns (Stock);
+  rpc AdjustStock(AdjustStockRequest) returns (Stock);
+}

@@ -1,0 +1,56 @@
+# Bookstore GraphQL Schema (SDL reference)
+# schema นี้เป็นเอกสารอ้างอิง — server ที่รันจริงอยู่ที่ `../03-graphql-server`
+
+"""
+ร้านหนังสือออนไลน์ — ตัวอย่างสำหรับ Beginner
+"""
+type Book {
+  id: ID!
+  title: String!
+  author: String!
+  price: Float!
+  inStock: Boolean!
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+type Order {
+  id: ID!
+  book: Book!
+  quantity: Int!
+  status: OrderStatus!
+  totalPrice: Float!
+}
+
+type Query {
+  """
+  ดึงหนังสือตาม id — คืน null ถ้าไม่พบ
+  """
+  book(id: ID!): Book
+
+  """
+  รายการหนังสือทั้งหมด
+  """
+  books: [Book!]!
+
+  """
+  ค้นหาตามชื่อผู้แต่ง
+  """
+  booksByAuthor(author: String!): [Book!]!
+}
+
+type Mutation {
+  """
+  สร้างออเดอร์ใหม่ (สถานะเริ่มต้น PENDING)
+  """
+  createOrder(bookId: ID!, quantity: Int!): Order!
+
+  """
+  อัปเดตสถานะออเดอร์
+  """
+  updateOrderStatus(orderId: ID!, status: OrderStatus!): Order
+}
