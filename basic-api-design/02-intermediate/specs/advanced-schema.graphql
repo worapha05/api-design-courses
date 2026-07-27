@@ -1,0 +1,108 @@
+"""
+Advanced Bookstore GraphQL Schema — Intermediate
+Input Types, Enums, Interfaces, Unions, Mutation Payloads, @deprecated
+"""
+enum Genre {
+  SCIENCE_FICTION
+  FANTASY
+  NON_FICTION
+  MYSTERY
+}
+
+interface Node {
+  id: ID!
+}
+
+interface CatalogItem {
+  id: ID!
+  title: String!
+  priceCents: Int!
+}
+
+type Author implements Node {
+  id: ID!
+  name: String!
+  bio: String
+  books: [Book!]!
+}
+
+type Book implements Node & CatalogItem {
+  id: ID!
+  title: String!
+  isbn: String!
+  """
+  @deprecated Use priceCents
+  """
+  price: Float @deprecated(reason: "Use priceCents for precision")
+  priceCents: Int!
+  genre: Genre!
+  author: Author!
+  tags: [String!]!
+}
+
+type Magazine implements Node & CatalogItem {
+  id: ID!
+  title: String!
+  priceCents: Int!
+  issueNumber: Int!
+  publishedMonth: String!
+}
+
+type Review implements Node {
+  id: ID!
+  rating: Int!
+  body: String
+  book: Book!
+}
+
+union SearchResult = Book | Author | Magazine
+
+input CreateBookInput {
+  title: String!
+  isbn: String!
+  authorId: ID!
+  priceCents: Int!
+  genre: Genre!
+  tags: [String!]
+  clientMutationId: String
+}
+
+input UpdateBookInput {
+  id: ID!
+  title: String
+  priceCents: Int
+  genre: Genre
+  tags: [String!]
+  clientMutationId: String
+}
+
+type UserError {
+  field: [String!]
+  message: String!
+  code: String
+}
+
+type CreateBookPayload {
+  book: Book
+  userErrors: [UserError!]!
+  clientMutationId: String
+}
+
+type UpdateBookPayload {
+  book: Book
+  userErrors: [UserError!]!
+  clientMutationId: String
+}
+
+type Query {
+  node(id: ID!): Node
+  book(id: ID!): Book
+  books(genre: Genre, limit: Int = 20): [Book!]!
+  search(q: String!): [SearchResult!]!
+  catalog(limit: Int = 20): [CatalogItem!]!
+}
+
+type Mutation {
+  createBook(input: CreateBookInput!): CreateBookPayload!
+  updateBook(input: UpdateBookInput!): UpdateBookPayload!
+}

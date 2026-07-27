@@ -1,0 +1,439 @@
+openapi: 3.0.3
+info:
+  title: Bookstore API
+  description: |
+    Contract-first Bookstore API (Intermediate).
+    แสดง reusable components, securitySchemes, request/response แยกกัน
+    และ deprecation notes สำหรับ lifecycle management.
+  version: 3.2.0
+  contact:
+    name: API Design Masterclass
+  license:
+    name: MIT
+
+servers:
+  - url: https://api.bookstore.example.com/v1
+    description: Production v1
+  - url: http://localhost:3200/v1
+    description: Local versioning demo
+
+tags:
+  - name: Books
+  - name: Authors
+  - name: Admin
+
+security:
+  - bearerAuth: []
+
+paths:
+  /health:
+    get:
+      tags: [Admin]
+      summary: Liveness probe
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /books:
+    get:
+      tags: [Books]
+      summary: List books
+      description: |
+        รองรับ pagination แบบ page/pageSize และ filter ตาม genre.
+        ต้องมี scope `books:read` หากใช้ OAuth2
+      security:
+        - bearerAuth: []
+        - oauth2: [books:read]
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/GenreFilter'
+      responses:
+        '200':
+          description: Paginated list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookConnection'
+              examples:
+                sample:
+                  value:
+                    data:
+                      - id: b1
+                        title: Dune
+                        isbn: '9780441172719'
+                        priceCents: 45000
+                        genre: SCIENCE_FICTION
+                        authorId: a1
+                        createdAt: '2024-01-15T10:00:00Z'
+                    meta:
+                      page: 1
+                      pageSize: 20
+                      totalItems: 1
+                      totalPages: 1
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags: [Books]
+      summary: Create book
+      security:
+        - bearerAuth: []
+        - oauth2: [books:write]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookRequest'
+            examples:
+              createDune:
+                value:
+                  title: Dune
+                  isbn: '9780441172719'
+                  authorId: a1
+                  priceCents: 45000
+                  genre: SCIENCE_FICTION
+      responses:
+        '201':
+          description: Created
+          headers:
+            Location:
+              schema:
+                type: string
+              example: /v1/books/b1
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /books/{bookId}:
+    parameters:
+      - $ref: '#/components/parameters/BookId'
+    get:
+      tags: [Books]
+      summary: Get book
+      responses:
+        '200':
+          description: Book
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Books]
+      summary: Partial update
+      security:
+        - bearerAuth: []
+        - oauth2: [books:write]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchBookRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /books/{bookId}/full:
+    get:
+      tags: [Books]
+      summary: Get book with embedded author (deprecated)
+      deprecated: true
+      description: |
+        **Deprecated since 3.1.0.** Use `GET /books/{bookId}` plus
+        `GET /authors/{authorId}` หรือ GraphQL query แทน.
+        Sunset: 2026-12-31.
+      responses:
+        '200':
+          description: Legacy nested payload
+          headers:
+            Deprecation:
+              schema:
+                type: string
+              example: 'true'
+            Sunset:
+              schema:
+                type: string
+              example: 'Sat, 31 Dec 2026 23:59:59 GMT'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LegacyBookFull'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /authors/{authorId}:
+    get:
+      tags: [Authors]
+      summary: Get author
+      parameters:
+        - name: authorId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Author
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Author'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token จาก IdP ขององค์กร
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: สำหรับ server-to-server partners
+    oauth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.bookstore.example.com/authorize
+          tokenUrl: https://auth.bookstore.example.com/token
+          scopes:
+            books:read: Read catalog
+            books:write: Mutate catalog
+
+  parameters:
+    BookId:
+      name: bookId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSize:
+      name: pageSize
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    GenreFilter:
+      name: genre
+      in: query
+      schema:
+        $ref: '#/components/schemas/Genre'
+
+  schemas:
+    Genre:
+      type: string
+      enum: [SCIENCE_FICTION, FANTASY, NON_FICTION, MYSTERY]
+
+    Book:
+      type: object
+      required: [id, title, isbn, authorId, priceCents, genre, createdAt]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        isbn:
+          type: string
+          pattern: '^[0-9]{13}$'
+        authorId:
+          type: string
+        priceCents:
+          type: integer
+          minimum: 0
+          description: ราคาเป็นสตางค์ เพื่อเลี่ยง floating point
+        price:
+          type: number
+          deprecated: true
+          description: ใช้ priceCents แทน
+        genre:
+          $ref: '#/components/schemas/Genre'
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateBookRequest:
+      type: object
+      required: [title, isbn, authorId, priceCents, genre]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        isbn:
+          type: string
+          pattern: '^[0-9]{13}$'
+        authorId:
+          type: string
+        priceCents:
+          type: integer
+          minimum: 0
+        genre:
+          $ref: '#/components/schemas/Genre'
+        tags:
+          type: array
+          items:
+            type: string
+          maxItems: 20
+
+    PatchBookRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        priceCents:
+          type: integer
+          minimum: 0
+        genre:
+          $ref: '#/components/schemas/Genre'
+
+    Author:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        bio:
+          type: string
+          nullable: true
+
+    LegacyBookFull:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        author:
+          $ref: '#/components/schemas/Author'
+
+    PaginationMeta:
+      type: object
+      required: [page, pageSize, totalItems, totalPages]
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalItems:
+          type: integer
+        totalPages:
+          type: integer
+
+    BookConnection:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Book'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    Problem:
+      type: object
+      required: [type, title, status, detail]
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+
+  responses:
+    BadRequest:
+      description: Validation error
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: https://api.bookstore.example.com/errors/validation
+            title: Validation Failed
+            status: 400
+            detail: isbn must be 13 digits
+            errors:
+              - field: isbn
+                message: must match pattern
+    Unauthorized:
+      description: Missing or invalid credentials
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Forbidden:
+      description: Authenticated but insufficient scope
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: Resource not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Conflict:
+      description: Conflict (duplicate ISBN)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'

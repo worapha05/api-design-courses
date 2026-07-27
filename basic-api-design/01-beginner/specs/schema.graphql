@@ -1,0 +1,54 @@
+"""
+Bookstore GraphQL Schema — Beginner Level
+Object Types, Queries, Mutations พื้นฐาน
+"""
+type Author {
+  """
+  Unique author identifier
+  """
+  id: ID!
+  name: String!
+  bio: String
+  """
+  Books written by this author
+  """
+  books: [Book!]!
+}
+
+type Book {
+  id: ID!
+  title: String!
+  isbn: String!
+  price: Float!
+  genre: String!
+  publishedAt: String
+  author: Author!
+  reviews: [Review!]!
+}
+
+type Review {
+  id: ID!
+  rating: Int!
+  body: String
+  book: Book!
+}
+
+type Query {
+  """
+  Fetch a single book by ID; returns null if not found
+  """
+  book(id: ID!): Book
+
+  """
+  List books with optional limit (default 20)
+  """
+  books(limit: Int = 20, genre: String): [Book!]!
+
+  author(id: ID!): Author
+  authors: [Author!]!
+}
+
+type Mutation {
+  createBook(title: String!, isbn: String!, authorId: ID!, price: Float!, genre: String!): Book!
+  addReview(bookId: ID!, rating: Int!, body: String): Review!
+}

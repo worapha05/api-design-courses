@@ -1,0 +1,25 @@
+# Orders Subgraph — owns Order; extends User with orders
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.3", import: ["@key", "@external"])
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  CANCELLED
+}
+
+type Order @key(fields: "id") {
+  id: ID!
+  totalCents: Int!
+  status: OrderStatus!
+  buyer: User!
+}
+
+extend type User @key(fields: "id") {
+  id: ID! @external
+  orders: [Order!]!
+}
+
+type Query {
+  order(id: ID!): Order
+}

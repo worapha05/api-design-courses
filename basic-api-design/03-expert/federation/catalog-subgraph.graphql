@@ -1,0 +1,23 @@
+# Catalog Subgraph — owns Book; references User by key
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.3", import: ["@key", "@external"])
+
+type Book @key(fields: "id") {
+  id: ID!
+  title: String!
+  isbn: String!
+  priceCents: Int!
+  author: User!
+}
+
+extend type User @key(fields: "id") {
+  id: ID! @external
+  """
+  Books authored — owned by catalog team
+  """
+  authoredBooks: [Book!]!
+}
+
+type Query {
+  book(id: ID!): Book
+  books(limit: Int = 20): [Book!]!
+}

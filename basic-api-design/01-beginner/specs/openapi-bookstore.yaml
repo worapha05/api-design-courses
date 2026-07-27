@@ -1,0 +1,395 @@
+openapi: 3.0.3
+info:
+  title: Bookstore API (Beginner)
+  description: |
+    ตัวอย่าง Strict RESTful Bookstore API สำหรับระดับ Beginner
+    เน้น plural nouns, HTTP methods, pagination และ error format ที่สม่ำเสมอ
+  version: 1.0.0
+  contact:
+    name: API Design Masterclass
+
+servers:
+  - url: http://localhost:3000
+    description: Local development
+
+tags:
+  - name: Books
+  - name: Authors
+  - name: Reviews
+
+paths:
+  /books:
+    get:
+      tags: [Books]
+      summary: List books
+      description: ดึงรายการหนังสือ พร้อม pagination, sorting และ filter
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: sort
+          in: query
+          schema:
+            type: string
+          example: '-publishedAt,title'
+          description: 'เรียงลำดับ คำนำหน้า - = descending'
+        - name: genre
+          in: query
+          schema:
+            type: string
+        - name: minPrice
+          in: query
+          schema:
+            type: number
+            minimum: 0
+      responses:
+        '200':
+          description: Paginated book list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+    post:
+      tags: [Books]
+      summary: Create a book
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookRequest'
+      responses:
+        '201':
+          description: Book created
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URI ของ resource ที่สร้างใหม่
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /books/{bookId}:
+    parameters:
+      - $ref: '#/components/parameters/BookId'
+    get:
+      tags: [Books]
+      summary: Get book by ID
+      responses:
+        '200':
+          description: Book found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Books]
+      summary: Replace entire book
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookRequest'
+      responses:
+        '200':
+          description: Book replaced
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Books]
+      summary: Partial update book
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchBookRequest'
+      responses:
+        '200':
+          description: Book updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Books]
+      summary: Delete book
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /books/{bookId}/reviews:
+    parameters:
+      - $ref: '#/components/parameters/BookId'
+    get:
+      tags: [Reviews]
+      summary: List reviews for a book
+      responses:
+        '200':
+          description: Review list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Review'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Reviews]
+      summary: Add review to a book
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReviewRequest'
+      responses:
+        '201':
+          description: Review created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+
+  /authors:
+    get:
+      tags: [Authors]
+      summary: List authors
+      responses:
+        '200':
+          description: Author list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Author'
+
+  /authors/{authorId}/books:
+    get:
+      tags: [Authors]
+      summary: List books by author
+      parameters:
+        - name: authorId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Books by author
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookListResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  parameters:
+    BookId:
+      name: bookId
+      in: path
+      required: true
+      schema:
+        type: string
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSize:
+      name: pageSize
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+  schemas:
+    Book:
+      type: object
+      required: [id, title, isbn, authorId, price, genre]
+      properties:
+        id:
+          type: string
+          example: 'b1'
+        title:
+          type: string
+          example: Dune
+        isbn:
+          type: string
+          pattern: '^[0-9]{13}$'
+          example: '9780441172719'
+        authorId:
+          type: string
+          example: 'a1'
+        price:
+          type: number
+          example: 450
+        genre:
+          type: string
+          example: science-fiction
+        publishedAt:
+          type: string
+          format: date
+
+    CreateBookRequest:
+      type: object
+      required: [title, isbn, authorId, price, genre]
+      properties:
+        title:
+          type: string
+        isbn:
+          type: string
+          pattern: '^[0-9]{13}$'
+        authorId:
+          type: string
+        price:
+          type: number
+          minimum: 0
+        genre:
+          type: string
+        publishedAt:
+          type: string
+          format: date
+
+    PatchBookRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        price:
+          type: number
+          minimum: 0
+        genre:
+          type: string
+
+    Author:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        bio:
+          type: string
+
+    Review:
+      type: object
+      required: [id, bookId, rating]
+      properties:
+        id:
+          type: string
+        bookId:
+          type: string
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        body:
+          type: string
+          nullable: true
+
+    CreateReviewRequest:
+      type: object
+      required: [rating]
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        body:
+          type: string
+
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalItems:
+          type: integer
+        totalPages:
+          type: integer
+
+    BookListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Book'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+        links:
+          type: object
+          additionalProperties:
+            type: string
+            nullable: true
+
+    Problem:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+
+  responses:
+    BadRequest:
+      description: Validation error
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: Resource not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Conflict:
+      description: Conflict (e.g. duplicate ISBN)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'

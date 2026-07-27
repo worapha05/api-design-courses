@@ -1,0 +1,16 @@
+# Users Subgraph — owns User entity (Federation v2 style)
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.3", import: ["@key", "@shareable"])
+
+type User @key(fields: "id") {
+  id: ID!
+  name: String!
+  """
+  PII — enforce field-level auth at subgraph or router
+  """
+  email: String!
+}
+
+type Query {
+  user(id: ID!): User
+  me: User
+}
