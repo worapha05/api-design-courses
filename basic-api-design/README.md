@@ -1,3 +1,7 @@
+📍 **Nav:** [`🏠 Dev Learning Courses Hub`](https://github.com/worapha05/dev-learning-courses-hub/blob/main/README.md) | [`📂 API Design Courses Index`](../README.md) | 📝 [`Prompt File`](https://github.com/worapha05/ai-learning-prompts-hub/blob/main/course-generation/api-design-courses/basic-api-design-prompt.md)
+
+---
+
 # Zero to Expert: API Design Masterclass
 
 หลักสูตรแบบครบวงจรสำหรับ Principal API Architect, Integration Engineer และ Backend Developer
