@@ -1,3 +1,7 @@
+📍 **Nav:** [`🏠 Dev Learning Courses Hub`](https://github.com/worapha05/dev-learning-courses-hub/blob/main/README.md) | [`📂 API Design Courses Index`](../README.md) | 📝 [`Prompt File`](https://github.com/worapha05/ai-learning-prompts-hub/blob/main/course-generation/api-design-courses/advanced-api-design-prompt.md)
+
+---
+
 # API & Real-time Communication Bootcamp — Zero to Expert
 
 bootcamp เรียนรู้ **Enterprise RESTful APIs, WebSockets และ Microservices Architecture** แบบครบวงจร
