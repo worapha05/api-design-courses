@@ -1,3 +1,7 @@
+📍 **Nav:** [`🏠 Dev Learning Courses Hub`](https://github.com/worapha05/dev-learning-courses-hub/blob/main/README.md) | [`📂 API Design Courses Index`](../README.md) | 📝 [`Prompt File`](https://github.com/worapha05/ai-learning-prompts-hub/blob/main/course-generation/api-design-courses/intermediate-api-design-prompt.md)
+
+---
+
 # Advanced API Designs and Communication Bootcamp — Zero to Expert
 
 bootcamp เรียนรู้ **Advanced API Designs และ Communication Protocols** แบบครบวงจร เน้น **GraphQL และ
